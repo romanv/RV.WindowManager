@@ -1,0 +1,104 @@
+﻿<Window x:Class="RV.WM2.WindowManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:RV.WM2.Infrastructure.Models;assembly=RV.WM2.Infrastructure"
+        xmlns:viewModels="clr-namespace:RV.WM2.WindowManager.ViewModels"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:core="clr-namespace:RV.WM2.WindowManager.Core"
+        Title="Window Manager"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d"
+        DataContext="{DynamicResource MainViewModel}"
+        Visibility="{Binding WindowVisibility}"
+        Left="{Binding WindowLeft, Mode=TwoWay}"
+        Top="{Binding WindowTop, Mode=TwoWay}"
+        Width="{Binding WindowWidth, Mode=OneWayToSource}"
+        Height="{Binding WindowHeight, Mode=OneWayToSource}"
+        Name="WindowMain">
+    <Window.Resources>
+        <viewModels:MainViewModel x:Key="MainViewModel" />
+        <ContextMenu x:Key="TrayMenu"
+                 x:Shared="False">
+            <MenuItem Header="Reload configuration"
+                      Command="{Binding CmdReloadConfiguration}" />
+            <Separator />
+            <MenuItem Command="{Binding CmdCloseApplication}"
+                      Header="Close" />
+        </ContextMenu>
+    </Window.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding CmdRegisterHotkeys}" />
+        </i:EventTrigger>
+        <i:EventTrigger EventName="MouseLeave">
+            <i:InvokeCommandAction Command="{Binding CmdMouseLeftWindow}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <i:Interaction.Behaviors>
+        <core:ActivateBehavior Activated="{Binding Activated, Mode=TwoWay}" />
+    </i:Interaction.Behaviors>
+    <Grid Name="BaseGrid"
+          Margin="2,4,2,4">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <tb:TaskbarIcon IconSource="icon.ico"
+                        ToolTip="WindowManager"
+                        ContextMenu="{StaticResource TrayMenu}" />
+        <TextBlock Name="ActiveWindowTitle"
+                   Grid.Row="0"
+                   FontSize="18"
+                   Margin="8,0,8,0"
+                   Text="{Binding ActiveWindowTitle}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   MaxWidth="{Binding TitleTextWidth, Mode=OneWay}"/>
+        <ItemsControl Name="SlotsList"
+                      ItemsSource="{Binding Slots}"
+                      Margin="0,4,0,0"
+                      Grid.Row="1">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Vertical"
+                               MaxHeight="260"
+                               />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="models:ScreenSlot">
+                    <Border Width="192"
+                            Height="32"
+                            Margin="2,0,2,2"
+                            BorderBrush="Gray"
+                            BorderThickness="1">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#EEEEEE" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#DDDDDD" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick"
+                                          Command="{Binding Path=DataContext.CmdSelectSlot,
+                                                            RelativeSource={RelativeSource FindAncestor, AncestorType=ItemsControl}}"
+                                          CommandParameter="{Binding}" />
+                        </Border.InputBindings>
+                        <TextBlock Margin="4,0,4,0"
+                                   VerticalAlignment="Center"
+                                   FontWeight="DemiBold"
+                                   Text="{Binding Name}" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Window>

@@ -1,0 +1,351 @@
+﻿<Window x:Class="RV.WM2.SlotEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:viewModels="clr-namespace:RV.WM2.SlotEditor.ViewModels"
+        xmlns:ui="clr-namespace:RV.WM2.SlotEditor.UI"
+        Title="Slot Editor"
+        SizeToContent="WidthAndHeight"
+        TextOptions.TextFormattingMode="Display"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d">
+    <Window.Resources>
+        <viewModels:MainViewModel x:Key="MainViewModel" />
+    </Window.Resources>
+    <Grid x:Name="BaseGrid"
+          DataContext="{StaticResource MainViewModel}">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+        <Grid x:Name="WorkspaceGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="128" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="192" />
+            </Grid.ColumnDefinitions>
+            <Grid Name="SlotsListGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ListBox x:Name="SlotsList"
+                         ItemsSource="{Binding SlotsConfigurationViewModel.Slots}"
+                         Margin="4,4,0,0"
+                         SelectedItem="{Binding SelectedSlotViewModel}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="viewModels:ScreenSlotViewModel">
+                            <Border Height="24"
+                                    Margin="0,0,1,2"
+                                    BorderBrush="Gray"
+                                    BorderThickness="1">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseEnter">
+                                        <i:InvokeCommandAction Command="{Binding CmdMouseEnter}" />
+                                    </i:EventTrigger>
+                                    <i:EventTrigger EventName="MouseLeave">
+                                        <i:InvokeCommandAction Command="{Binding CmdMouseLeave}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#EEEEEE" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#DDDDDD" />
+                                            </Trigger>
+                                            <DataTrigger Binding="{Binding Path=IsSelected}"
+                                                         Value="True">
+                                                <Setter Property="Background" Value="#95d5f3" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Margin="4,0,4,0"
+                                           VerticalAlignment="Center"
+                                           FontWeight="DemiBold"
+                                           Text="{Binding Name}" />
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Grid Name="AddRemoveButtonsGrid"
+                      Grid.Row="1"
+                      Height="40">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="+"
+                            Margin="4,4,0,4"
+                            Command="{Binding CmdAddNewSlot}"/>
+                    <Button Content="-"
+                            Grid.Column="1"
+                            Margin="4,4,0,4"
+                            Command="{Binding CmdRemoveSelectedSlot}"/>
+                </Grid>
+            </Grid>
+            <ItemsControl Grid.Column="1"
+                          ItemsSource="{Binding SlotsConfigurationViewModel.Slots}"
+                          Margin="4"
+                          BorderThickness="1"
+                          BorderBrush="Black">
+                <ItemsControl.Resources>
+                    <ui:LeftTopToScreenModelMarginConverter x:Key="LeftTopToMargin" />
+                </ItemsControl.Resources>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas x:Name="ScreenModel"
+                                Background="AntiqueWhite"
+                                Width="{Binding ScreenModelWidth}"
+                                Height="{Binding ScreenModelHeight}"
+                                SnapsToDevicePixels="True"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Panel.ZIndex" Value="{Binding Path=ZIndex}"/>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="{Binding Width, Converter={ui:ActualToScreenModelCoordinateConverter}}"
+                                Height="{Binding Height, Converter={ui:ActualToScreenModelCoordinateConverter}}"
+                                Background="{Binding Fill}"
+                                BorderThickness="{Binding BorderThickness}"
+                                BorderBrush="{Binding BorderBrush}"
+                                Opacity="{Binding Opacity}"
+                                Panel.ZIndex="{Binding ZIndex}">
+                            <Border.Margin>
+                                <MultiBinding Converter="{StaticResource LeftTopToMargin}">
+                                    <Binding Path="Left" />
+                                    <Binding Path="Top" />
+                                </MultiBinding>
+                            </Border.Margin>
+                            <DockPanel LastChildFill="False"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center">
+                                <TextBlock FontSize="14"
+                                           DockPanel.Dock="Top"
+                                           Text="{Binding Name}"
+                                           HorizontalAlignment="Center">
+                                </TextBlock>
+                                <TextBlock VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           FontSize="14"
+                                           DockPanel.Dock="Top">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0}x{1}">
+                                            <Binding Path="Width" />
+                                            <Binding Path="Height" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Name="SlotDetailsBorder"
+                    BorderThickness="1"
+                    BorderBrush="Black"
+                    Background="#EEEEEE"
+                    Margin="0,4,4,4"
+                    Grid.Column="2">
+                <Border.Resources>
+                    <Style x:Key="ButtonBorderStyle"
+                           TargetType="Border">
+                        <Setter Property="BorderThickness" Value="1" />
+                        <Setter Property="BorderBrush" Value="Gray" />
+                        <Setter Property="Margin" Value="2" />
+                        <Setter Property="Background" Value="#EEEEEE" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DDDDDD" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Resources>
+                <DockPanel LastChildFill="False"
+                           Margin="8,0,8,8">
+                    <DockPanel.Resources>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="DockPanel.Dock" Value="Top" />
+                            <Setter Property="Margin" Value="5,4,0,0" />
+                        </Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="DockPanel.Dock" Value="Top" />
+                            <Setter Property="Margin" Value="0,0,0,0" />
+                        </Style>
+                    </DockPanel.Resources>
+                    <TextBlock Text="Name:" />
+                    <TextBox Text="{Binding SelectedSlotViewModel.Name, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Left:"
+                               Margin="5,16,0,0"/>
+                    <TextBox Text="{Binding SelectedSlotViewModel.Left, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Top:"/>
+                    <TextBox Text="{Binding SelectedSlotViewModel.Top, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Width:"
+                               Margin="5,16,0,0"/>
+                    <TextBox Text="{Binding SelectedSlotViewModel.Width, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Height:"/>
+                    <TextBox Text="{Binding SelectedSlotViewModel.Height, UpdateSourceTrigger=PropertyChanged}" />
+                    <Grid Name="StretchButtonsGrid"
+                          DockPanel.Dock="Top"
+                          Margin="0,8,0,0"
+                          Height="30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource ButtonBorderStyle}">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdStretchSelectedSlotH}" />
+                            </Border.InputBindings>
+                            <TextBlock Text="1"
+                                       FontFamily="Wingdings 3"
+                                       FontSize="18"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       Margin="-6,-2,0,0"/>
+                        </Border>
+                        <Border Grid.Column="1"
+                                Style="{StaticResource ButtonBorderStyle}">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdStretchSelectedSlotV}"  />
+                            </Border.InputBindings>
+                            <TextBlock Text="2"
+                                       FontFamily="Wingdings 3"
+                                       FontSize="18"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       Margin="-3,-1,0,0"/>
+                        </Border>
+                    </Grid>
+                    <Grid Name="SnapButtonsGrid"
+                          DockPanel.Dock="Top"
+                          Margin="0,8,0,0"
+                          Width="168"
+                          Height="168">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.Resources>
+                                <Style TargetType="Border"
+                                       BasedOn="{StaticResource ButtonBorderStyle}" />
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="HorizontalAlignment" Value="Center" />
+                                    <Setter Property="FontFamily" Value="Wingdings" />
+                                    <Setter Property="FontSize" Value="18" />
+                                </Style>
+                        </Grid.Resources>
+                        <Border Grid.Column="0"
+                                Grid.Row="0">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="0,0" />
+                            </Border.InputBindings>
+                            <TextBlock Text="ã" />
+                        </Border>
+                        <Border Grid.Column="1"
+                                Grid.Row="0">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="1,0" />
+                            </Border.InputBindings>
+                            <TextBlock Text="á" />
+                        </Border>
+                        <Border Grid.Column="2"
+                                Grid.Row="0">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="2,0" />
+                            </Border.InputBindings>
+                            <TextBlock Text="ä" />
+                        </Border>
+                        <Border Grid.Column="0"
+                                Grid.Row="1">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="0,1" />
+                            </Border.InputBindings>
+                            <TextBlock Text="ß" />
+                        </Border>
+                        <Border Grid.Column="1"
+                                Grid.Row="1">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="1,1" />
+                            </Border.InputBindings>
+                            <TextBlock Text="l" />
+                        </Border>
+                        <Border Grid.Column="2"
+                                Grid.Row="1">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="2,1" />
+                            </Border.InputBindings>
+                            <TextBlock Text="à" />
+                        </Border>
+                        <Border Grid.Column="0"
+                                Grid.Row="2">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="0,2" />
+                            </Border.InputBindings>
+                            <TextBlock Text="å" />
+                        </Border>
+                        <Border Grid.Column="1"
+                                Grid.Row="2">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="1,2" />
+                            </Border.InputBindings>
+                            <TextBlock Text="â" />
+                        </Border>
+                        <Border Grid.Column="2"
+                                Grid.Row="2">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CmdSnapSelectedSlot}" CommandParameter="2,2" />
+                            </Border.InputBindings>
+                            <TextBlock Text="æ" />
+                        </Border>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Grid>
+        <Grid Name="SaveCancelButtonsGrid"
+              Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Content="Cancel"
+                    Grid.Column="1"
+                    Width="64"
+                    Margin="0,4,4,8"
+                    Command="{Binding CmdCancelChanges}"/>
+            <Button Content="Save"
+                    Grid.Column="2"
+                    Width="64"
+                    Margin="4,4,8,8"
+                    Command="{Binding CmdSaveChanges}"/>
+        </Grid>
+    </Grid>
+</Window>
