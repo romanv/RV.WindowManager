@@ -3,16 +3,15 @@
     using System;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
+    using System.Runtime.InteropServices;
     using System.Windows;
     using System.Windows.Input;
-
     using Microsoft.TeamFoundation.MVVM;
-
     using RV.WM2.Infrastructure.Core;
     using RV.WM2.Infrastructure.Models;
     using RV.WM2.Infrastructure.MVVM;
     using RV.WM2.WindowManager.Core;
-
+    using static RV.WM2.WindowManager.Core.NativeMethods;
     using Point = System.Windows.Point;
 
     public class MainViewModel : BrowsableObject
@@ -233,12 +232,19 @@
                 return;
             }
 
+            // find the difference between actually visible and reported winddow borders
+            const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+            DwmGetWindowAttribute(_activeWindowHandle, DWMWA_EXTENDED_FRAME_BOUNDS, out RECT rect1, Marshal.SizeOf(typeof(RECT)));
+            GetWindowRect(_activeWindowHandle, out RECT rect2);
+            var leftOffset = rect1.left - rect2.left;
+            var bottomOffset = rect2.bottom - rect1.bottom;
+
             var moveResult = NativeMethods.MoveWindow(
                 _activeWindowHandle,
-                (int)slot.Left,
+                (int)slot.Left - leftOffset,
                 (int)slot.Top,
-                (int)slot.Width,
-                (int)slot.Height,
+                (int)slot.Width + (leftOffset * 2),
+                (int)slot.Height + bottomOffset,
                 true);
 
             if (moveResult)

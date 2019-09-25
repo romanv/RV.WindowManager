@@ -6,6 +6,15 @@
 
     internal class NativeMethods
     {
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+
         public static string GetWindowTitleUnderCursor()
         {
             var p = default(Point);
@@ -55,6 +64,12 @@
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
+
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowRect(IntPtr hwnd, out RECT rect);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr GetAncestor(IntPtr hWnd, uint gaFlags);
