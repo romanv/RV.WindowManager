@@ -34,13 +34,21 @@
         private void RegisterHotKey(Window mainWindow)
         {
             var helper = new WindowInteropHelper(mainWindow);
-            const uint VkC = 0x43;
-            const uint ModWin = 0x0008;
+            const uint VkC = 0x44;
+            // const uint ModWin = 0x0008;
+            const uint ModWinAlt = 0x000C;
 
-            if (!NativeMethods.RegisterHotKey(helper.Handle, HotkeyId, ModWin, VkC))
+            if (!NativeMethods.RegisterHotKey(helper.Handle, HotkeyId, ModWinAlt, VkC))
             {
                 var error = NativeMethods.GetLastError();
-                MessageBox.Show("Cannot register global hotkey, error:\n" + error);
+                if (error == 1409)
+                {
+                    MessageBox.Show("Hotkey is already registered by another program");
+                }
+                else
+                {
+                    MessageBox.Show("Cannot register global hotkey, error:\n" + error);
+                }                
             }
         }
 
